@@ -6,10 +6,11 @@ let canvas = null;
 let player = null;
 let ctx = null;
 let client = null;
+let host = import.meta.env.VITE_WS_HOST ? import.meta.env.VITE_WS_HOST : window.location.hostname;
 
 onMounted(() => {
 	console.log("init");
-  client = new WebSocket("ws://" + import.meta.env.VITE_WS_HOST + "/ws");
+  client = new WebSocket("ws://" + host + "/ws");
   //heart beat
   client.onopen = function () {
     console.log("WS open");
