@@ -25,6 +25,7 @@ from libcamera import Transform
 from PyQt5.QtWidgets import QApplication,QWidget
 
 os.putenv('DISPLAY',":0")
+qtapp = QApplication([])
 
 resolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 fpsOptions = [30, 60]
@@ -35,16 +36,6 @@ recording=False
 
 camera = None
 qtapp = None
-
-class FullScreenWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-
-    def initUI(self):
-        self.setWindowTitle('全屏窗口')
-        self.setGeometry(100, 100, 500, 500)
-
 
 class Config(object):
     def __init__(self) -> None:
@@ -88,7 +79,6 @@ if os.path.exists("./video") == False:
 async def lifespan(app: FastAPI):
     try:
         global camera,qtapp
-        qtapp = QApplication([])
         camera=Picamera2()
         camera_config= camera.create_preview_configuration(main=
             {
