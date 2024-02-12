@@ -17,7 +17,7 @@ from subprocess import PIPE, Popen
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
-from picamera2 import picamera2
+from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder,MJPEGEncoder
 from picamera2.outputs import FfmpegOutput,FileOutput
 from libcamera import Transform
