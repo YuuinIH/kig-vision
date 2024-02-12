@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 import datetime
 import io
 import json
-from multiprocessing import Process
 import os
 from struct import Struct
 from threading import Thread
@@ -23,10 +22,9 @@ from picamera2.previews.qt import QGlPicamera2
 from picamera2.encoders import H264Encoder,MJPEGEncoder
 from picamera2.outputs import FfmpegOutput,FileOutput
 from libcamera import Transform
-from PyQt5.QtWidgets import QApplication,QWidget
+from .fullscreenpreview import FullScreenQtGlPreview
 
 os.putenv('DISPLAY',":0")
-qtapp = QApplication([])
 
 resolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 fpsOptions = [30, 60]
@@ -36,6 +34,8 @@ mode = "record"
 recording=False
 
 camera = None
+window = None
+
 
 class Config(object):
     def __init__(self) -> None:
@@ -74,35 +74,27 @@ if os.path.exists("./image") == False:
 if os.path.exists("./video") == False:
     os.mkdir("./video")
 
-class QTProcess(Process):
-    def __init__(self,app:QApplication):
-        self.app=app
-        super(QTProcess,self).__init__()
-
-    def run(self):
-        print("qt init")
-        self.app.exec()
-
-qtthread = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         global camera
+        # camera = Picamera2()
+        # camera.resolution = config.resolution
+        # camera.framerate = config.fps
+        # camera.vflip = True
+        # camera.hflip = True
+        # camera.start_preview()
+        # camera.preview.resolution = config.preViewResolution
         camera=Picamera2()
-        qtthread=QTProcess(qtapp)
-        camera_config=camera.create_preview_configuration(main=
+        camera_config= camera.create_preview_configuration(main=
             {
                 "size": config.resolution,
             }
         )
         camera.configure(camera_config)
-        qpicamera2 = QGlPicamera2(camera, keep_ar=False)
-        qpicamera2.setWindowTitle("Qt Picamera2 App")
-        qpicamera2.showFullScreen()
+        camera.start_preview(FullScreenQtGlPreview())
         camera.start()
-        qpicamera2.show()
-        qtthread.start()
     except Exception as e:
         print(e)
         raise e
@@ -110,7 +102,7 @@ async def lifespan(app: FastAPI):
     if camera != None:
         camera.close()
         camera = None
-    qtthread.join()
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -401,4 +393,4 @@ app.mount("/", StaticFiles(directory="web/dist", html=True), name="web")
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=80)
