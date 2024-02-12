@@ -79,6 +79,7 @@ class QTthread(Thread):
         super(QTthread,self).__init__()
 
     def run(self):
+        print("qt init")
         self.app.exec()
 
 qtthread = None
