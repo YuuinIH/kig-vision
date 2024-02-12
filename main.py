@@ -307,6 +307,7 @@ class ConnectionManager:
         self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
+        print("connect")
         await websocket.accept()
         try:
             mutex.acquire()
