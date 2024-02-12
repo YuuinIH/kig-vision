@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 import datetime
 import io
 import json
+from multiprocessing import Process
 import os
 from struct import Struct
 from threading import Thread
@@ -73,10 +74,10 @@ if os.path.exists("./image") == False:
 if os.path.exists("./video") == False:
     os.mkdir("./video")
 
-class QTthread(Thread):
+class QTProcess(Process):
     def __init__(self,app:QApplication):
         self.app=app
-        super(QTthread,self).__init__()
+        super(QTProcess,self).__init__()
 
     def run(self):
         print("qt init")
@@ -89,7 +90,7 @@ async def lifespan(app: FastAPI):
     try:
         global camera
         camera=Picamera2()
-        qtthread=QTthread(qtapp)
+        qtthread=QTProcess(qtapp)
         camera_config=camera.create_preview_configuration(main=
             {
                 "size": config.resolution,
