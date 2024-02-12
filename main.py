@@ -150,7 +150,9 @@ def setConfig(configRequest: ConfigRequest):
                     "size": configRequest.resolution,
                 }
             )
+    camera.stop()
     camera.configure(newconfig)
+    camera.start()
     config.resolution = configRequest.resolution
     config.fps = configRequest.fps
     config.preViewResolution = configRequest.preViewResolution
