@@ -291,6 +291,7 @@ class BroadcastThread(Thread):
                     if buf:
                         try:
                             mutex.acquire()
+                            print(len(buf))
                             await self.manager.broadcast(buf)
                         finally:
                             mutex.release()

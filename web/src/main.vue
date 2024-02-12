@@ -7,6 +7,7 @@ import stream from "./stream.vue";
 
 const httpClient = axios.create();
 if (import.meta.env.MODE === "development") {
+  console.log(import.meta.env.VITE_HOST);
   httpClient.defaults.baseURL = import.meta.env.VITE_HOST;
 }
 
