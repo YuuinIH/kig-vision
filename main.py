@@ -96,7 +96,7 @@ async def lifespan(app: FastAPI):
             }
         )
         camera.configure(camera_config)
-        qpicamera2 = QPicamera2(camera)
+        qpicamera2 = QPicamera2(camera, keep_ar=False)
         qpicamera2.showFullScreen()
         camera.start()
         qpicamera2.show()
