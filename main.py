@@ -79,10 +79,7 @@ async def lifespan(app: FastAPI):
     try:
         global camera
         camera=Picamera2()
-        camera_config= camera.create_preview_configuration(main=
-            {
-                "size": config.resolution,
-            }
+        camera_config=camera.create_preview_configuration(
         )
         camera.configure(camera_config)
         qpicamera2 = QGlPicamera2(camera, keep_ar=False)
