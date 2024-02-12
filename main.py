@@ -18,9 +18,11 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from picamera2 import Picamera2,Preview
+from picamera2.previews.qt import QGlPicamera2
 from picamera2.encoders import H264Encoder,MJPEGEncoder
 from picamera2.outputs import FfmpegOutput,FileOutput
 from libcamera import Transform
+from PyQt5.QtWidgets import QApplication,QWidget
 
 os.putenv('DISPLAY',":0")
 
@@ -32,7 +34,16 @@ mode = "record"
 recording=False
 
 camera = None
-window = None
+qtapp = None
+
+class FullScreenWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('全屏窗口')
+        self.setGeometry(100, 100, 500, 500)
 
 
 class Config(object):
@@ -76,14 +87,8 @@ if os.path.exists("./video") == False:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        global camera
-        # camera = Picamera2()
-        # camera.resolution = config.resolution
-        # camera.framerate = config.fps
-        # camera.vflip = True
-        # camera.hflip = True
-        # camera.start_preview()
-        # camera.preview.resolution = config.preViewResolution
+        global camera,qtapp
+        qtapp = QApplication([])
         camera=Picamera2()
         camera_config= camera.create_preview_configuration(main=
             {
@@ -91,8 +96,10 @@ async def lifespan(app: FastAPI):
             }
         )
         camera.configure(camera_config)
-        camera.start_preview(Preview.QT)
+        qpicamera2 = QGlPicamera2(camera)
+        qpicamera2.showFullScreen()
         camera.start()
+        qpicamera2.show()
     except Exception as e:
         print(e)
         raise e
