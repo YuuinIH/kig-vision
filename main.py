@@ -315,7 +315,7 @@ class ConnectionManager:
         finally:
             mutex.release()
         await websocket.send_bytes(
-            JSMPEG_HEADER.pack(JSMPEG_MAGIC, camera.resolution[0], camera.resolution[1])
+            JSMPEG_HEADER.pack(JSMPEG_MAGIC, config.resolution[0], config.resolution[1])
         )
 
     def disconnect(self, websocket: WebSocket):
