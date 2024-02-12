@@ -284,7 +284,7 @@ class BroadcastOutput(object):
                 "-pix_fmt",
                 "yuv420p",
                 "-s",
-                "%dx%d" % config.resolution,
+                "%dx%d" % (config.resolution[0], config.resolution[1]),
                 "-r",
                 str(float(config.framerate)),
                 "-i",
