@@ -17,12 +17,17 @@ from subprocess import PIPE, Popen
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
+from picamera2 import Picamera2,Preview
+from picamera2.encoders import H264Encoder,MJPEGEncoder
+from picamera2.outputs import FfmpegOutput,FileOutput
+from libcamera import Transform
 
 resolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 fpsOptions = [30, 60]
 preViewResolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 modeOptions = ["record", "stream"]
 mode = "record"
+recording=False
 
 camera = None
 
@@ -68,25 +73,27 @@ if os.path.exists("./video") == False:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        import picamera
-
-        try:
-            global camera
-            camera = picamera.PiCamera()
-            camera.resolution = config.resolution
-            camera.framerate = config.fps
-            camera.vflip = True
-            camera.hflip = True
-            camera.start_preview()
-            camera.preview.resolution = config.preViewResolution
-        except Exception as e:
-            print(e)
-            raise e
-    except ImportError:
-        print("picamera not found")
-        raise ImportError
-    finally:
-        pass
+        global camera
+        # camera = Picamera2()
+        # camera.resolution = config.resolution
+        # camera.framerate = config.fps
+        # camera.vflip = True
+        # camera.hflip = True
+        # camera.start_preview()
+        # camera.preview.resolution = config.preViewResolution
+        camera=Picamera2()
+        camera_config= camera.create_still_configuration(main=
+            {
+                "size": config.resolution,
+                "transform": "Transform(" + ("hflip=1" if config.hflip else "") + ("vflip=1" if config.vflip else "") + ")",
+            }
+        )
+        camera.configure(camera_config)
+        camera.start_preview(Preview.DRM)
+        camera.start()
+    except Exception as e:
+        print(e)
+        raise e
     yield
     if camera != None:
         camera.close()
@@ -123,44 +130,48 @@ def getOptions():
 
 @app.get("/config")
 def getConfig():
+    # return {
+    #     "resolution": camera.resolution,
+    #     "fps": config.fps,
+    #     "preViewResolution": config.preViewResolution,
+    #     "hflip": camera.hflip,
+    #     "vflip": camera.vflip,
+    # }
     return {
-        "resolution": camera.resolution,
+        "resolution": config.resolution,
         "fps": config.fps,
         "preViewResolution": config.preViewResolution,
-        "hflip": camera.hflip,
-        "vflip": camera.vflip,
+        "hflip": config.hflip,
+        "vflip": config.vflip,
     }
 
 
 @app.post("/config")
 def setConfig(configRequest: ConfigRequest):
-    if configRequest.resolution is not None:
-        camera.resolution = configRequest.resolution
-        config.resolution = configRequest.resolution
-    if configRequest.fps is not None:
-        camera.framerate = configRequest.fps
-        config.fps = configRequest.fps
-    if configRequest.preViewResolution is not None:
-        camera.preview.resolution = configRequest.preViewResolution
-        config.preViewResolution = configRequest.preViewResolution
-    if configRequest.hflip is not None:
-        camera.hflip = configRequest.hflip
-        config.hflip = configRequest.hflip
-    if configRequest.vflip is not None:
-        camera.vflip = configRequest.vflip
-        config.vflip = configRequest.vflip
+    newconfig=camera.create_still_configuration(main=
+                {
+                    "size": configRequest.resolution,
+                    "transform": Transform(hflip=1 if (configRequest.hflip) else 0, vflip=1 if (configRequest.vflip) else 0),
+                }
+            )
+    camera.configure(newconfig)
+    config.resolution = configRequest.resolution
+    config.fps = configRequest.fps
+    config.preViewResolution = configRequest.preViewResolution
+    config.hflip = configRequest.hflip
+    config.vflip = configRequest.vflip
     return {
-        "resolution": camera.resolution,
+        "resolution": config.resolution,
         "fps": config.fps,
         "preViewResolution": config.preViewResolution,
-        "hflip": camera.hflip,
-        "vflip": camera.vflip,
+        "hflip": config.hflip,
+        "vflip": config.vflip,
     }
 
 
 @app.post("/start")
 def startCamera():
-    camera.start_preview()
+    camera.start_preview(Preview.DRM)
     return {"status": "started"}
 
 
@@ -174,7 +185,7 @@ def stopCamera():
 def captureImage():
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     filename = f"./image/{timestamp}.jpg"
-    camera.capture(filename)
+    camera.capture_file(filename)
 
     return {"status": "captured"}
 
@@ -206,65 +217,36 @@ def deleteCaptures(req: deleteCaptures):
     return {"status": "deleted"}
 
 
-class MP4Outputer(object):
-    def __init__(self, path: Union[str, Path]):
-        print("MP4saverOutput")
-        self.converter = Popen(
-            [
-                "ffmpeg",
-                "-f",
-                "h264",
-                "-i",
-                "-",
-                "-vcodec",
-                "copy",
-                "-f",
-                "mp4",
-                "-y",
-                str(path),
-            ],
-            stdin=PIPE,
-            stdout=PIPE,
-            stderr=PIPE,
-            shell=False,
-            close_fds=True,
-        )
-
-    def write(self, data: bytes):
-        self.converter.stdin.write(data)
-
-    def flush(self):
-        self.converter.stdin.close()
-        self.converter.wait()
-
-
 @app.post("/record")
 def recordVideo():
-    if camera.recording:
+    if recording:
         raise Exception("Recording")
     if mode == "stream":
         raise Exception("Streaming")
     global MP4Output
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     filename = f"./video/{timestamp}.mp4"
-    MP4Output = MP4Outputer(filename)
-    camera.start_recording(MP4Output, format="h264")
+    encoder = H264Encoder(10000000)
+    output = FfmpegOutput(filename)
+    camera.start_recording(encoder,output)
+    recording=True
     return {"status": "recording"}
 
 
 @app.post("/stopRecord")
 def stopRecordVideo():
-    if not camera.recording:
+    if not recording:
         raise Exception("Not Recording")
     if mode == "stream":
         raise Exception("Streaming")
     camera.stop_recording()
+    recording=False
     return {"status": "stopped"}
 
 
 @app.get("/record")
 def getRecordStatus():
-    return {"status": camera.recording, "recordlist": os.listdir("./video")}
+    return {"status": recording, "recordlist": os.listdir("./video")}
 
 
 @app.get("/record/{filename}")
@@ -293,57 +275,17 @@ mutex = threading.Lock()
 JSMPEG_MAGIC = b"jsmp"
 JSMPEG_HEADER = Struct(">4sHH")
 
-
-class BroadcastOutput(object):
-    def __init__(self, camera):
-        print("Spawning background conversion process")
-        self.converter = Popen(
-            [
-                "ffmpeg",
-                "-f",
-                "rawvideo",
-                "-pix_fmt",
-                "yuv420p",
-                "-s",
-                "%dx%d" % camera.resolution,
-                "-r",
-                str(float(camera.framerate)),
-                "-i",
-                "-",
-                "-f",
-                "mpeg1video",
-                "-b",
-                "1500k",
-                "-r",
-                str(float(camera.framerate)),
-                "-",
-            ],
-            stdin=PIPE,
-            stdout=PIPE,
-            shell=False,
-            close_fds=True,
-        )
-
-    def write(self, b):
-        self.converter.stdin.write(b)
-
-    def flush(self):
-        print("Waiting for background conversion process to exit")
-        self.converter.stdin.close()
-        self.converter.wait()
-
-
 class BroadcastThread(Thread):
-    def __init__(self, converter, manager):
+    def __init__(self, file:io.BufferedIOBase, manager):
         super(BroadcastThread, self).__init__()
-        self.converter = converter
+        self.file = file
         self.manager = manager
 
     def run(self):
         async def broadcast_loop():
             try:
                 while True:
-                    buf = self.converter.stdout.read1(32768)
+                    buf = self.file.read1(32768)
                     if buf:
                         try:
                             mutex.acquire()
@@ -353,7 +295,7 @@ class BroadcastThread(Thread):
                     elif self.converter.poll() is not None:
                         break
             finally:
-                self.converter.stdout.close()
+                self.file.close()
 
         asyncio.run(broadcast_loop())
 
@@ -421,16 +363,16 @@ def setMode(req: modeRequest):
     global mode
     if not req.mode in modeOptions:
         raise Exception("Invalid mode")
-    if camera.recording and mode == "record" and req.mode == "stream":
+    if recording and mode == "record" and req.mode == "stream":
         raise Exception("Recording")
 
     if req.mode == "stream" and mode == "record":
         mode = req.mode
-        global broadcastOutput
-        broadcastOutput = BroadcastOutput(camera)
         global broadcastThread
-        broadcastThread = BroadcastThread(broadcastOutput.converter, manager)
-        camera.start_recording(broadcastOutput, format="yuv")
+        buf = io.BufferedIOBase()
+        broadcastThread = BroadcastThread(buf , manager)
+        encoder = MJPEGEncoder(1000000)
+        camera.start_recording(encoder,FileOutput(buf))
         broadcastThread.start()
     elif req.mode == "record" and mode == "stream":
         mode = req.mode
