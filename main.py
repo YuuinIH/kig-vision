@@ -85,7 +85,6 @@ async def lifespan(app: FastAPI):
         camera_config= camera.create_still_configuration(main=
             {
                 "size": config.resolution,
-                "transform": "Transform(" + ("hflip=1" if config.hflip else "") + ("vflip=1" if config.vflip else "") + ")",
             }
         )
         camera.configure(camera_config)
@@ -151,7 +150,6 @@ def setConfig(configRequest: ConfigRequest):
     newconfig=camera.create_still_configuration(main=
                 {
                     "size": configRequest.resolution,
-                    "transform": Transform(hflip=1 if (configRequest.hflip) else 0, vflip=1 if (configRequest.vflip) else 0),
                 }
             )
     camera.configure(newconfig)
