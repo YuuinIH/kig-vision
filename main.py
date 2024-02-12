@@ -17,12 +17,12 @@ from subprocess import PIPE, Popen
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
-from picamera2 import Picamera2,Preview
-from picamera2.previews.qt import QGlPicamera2
+from picamera2 import picamera2
 from picamera2.encoders import H264Encoder,MJPEGEncoder
 from picamera2.outputs import FfmpegOutput,FileOutput
 from libcamera import Transform
 from src.fullscreenpreview import FullScreenQtGlPreview
+from threading import Condition
 
 os.putenv('DISPLAY',":0")
 
@@ -287,15 +287,13 @@ class BroadcastThread(Thread):
         async def broadcast_loop():
             try:
                 while True:
-                    buf = self.file.read1(32768)
-                    if buf:
-                        try:
-                            mutex.acquire()
-                            print(len(buf))
-                            await self.manager.broadcast(buf)
-                        finally:
-                            mutex.release()
-                    elif self.stop_requested:
+                    with self.file.condition:
+                        self.file.condition.wait()
+                        frame = self.file.frame
+                        if frame is None:
+                            break
+                        await self.manager.broadcast(frame)
+                    if self.stop_requested:
                         break
             finally:
                 self.file.close()
@@ -361,6 +359,15 @@ async def stream_ws(websocket: WebSocket):
 class modeRequest(BaseModel):
     mode: str
 
+class StreamingOutput(io.BufferedIOBase):
+    def __init__(self):
+        self.frame = None
+        self.condition = Condition()
+
+    def write(self, buf):
+        with self.condition:
+            self.frame = buf
+            self.condition.notify_all()
 
 @app.post("/mode")
 def setMode(req: modeRequest):
@@ -373,7 +380,7 @@ def setMode(req: modeRequest):
     if req.mode == "stream" and mode == "record":
         mode = req.mode
         global broadcastThread
-        buf = io.BytesIO()
+        buf = StreamingOutput()
         broadcastThread = BroadcastThread(buf,manager)
         encoder = MJPEGEncoder(1000000)
         camera.start_recording(encoder,FileOutput(buf))
