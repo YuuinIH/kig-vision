@@ -82,7 +82,7 @@ async def lifespan(app: FastAPI):
         # camera.start_preview()
         # camera.preview.resolution = config.preViewResolution
         camera=Picamera2()
-        camera_config= camera.create_still_configuration(main=
+        camera_config= camera.create_preview_configuration(main=
             {
                 "size": config.resolution,
             }
@@ -147,7 +147,7 @@ def getConfig():
 
 @app.post("/config")
 def setConfig(configRequest: ConfigRequest):
-    newconfig=camera.create_still_configuration(main=
+    newconfig=camera.create_preview_configuration(main=
                 {
                     "size": configRequest.resolution,
                 }
