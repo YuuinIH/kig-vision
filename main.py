@@ -75,8 +75,8 @@ if os.path.exists("./video") == False:
 
 class QTthread(Thread):
     def __init__(self,app:QApplication):
-        super()
         self.app=app
+        super()
 
     def run(self):
         self.app.exec()
