@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from picamera2 import Picamera2,Preview
-from picamera2.previews.qt import QPicamera2
+from picamera2.previews.qt import QGlPicamera2
 from picamera2.encoders import H264Encoder,MJPEGEncoder
 from picamera2.outputs import FfmpegOutput,FileOutput
 from libcamera import Transform
@@ -85,7 +85,8 @@ async def lifespan(app: FastAPI):
             }
         )
         camera.configure(camera_config)
-        qpicamera2 = QPicamera2(camera, keep_ar=False)
+        qpicamera2 = QGlPicamera2(camera, keep_ar=False)
+        qpicamera2.setWindowTitle("Qt Picamera2 App")
         qpicamera2.showFullScreen()
         camera.start()
         qpicamera2.show()
