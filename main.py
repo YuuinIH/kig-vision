@@ -290,8 +290,6 @@ class BroadcastThread(Thread):
                             await self.manager.broadcast(buf)
                         finally:
                             mutex.release()
-                    elif self.converter.poll() is not None:
-                        break
             finally:
                 self.file.close()
 
@@ -368,7 +366,7 @@ def setMode(req: modeRequest):
         mode = req.mode
         global broadcastThread
         buf = io.BytesIO()
-        broadcastThread = BroadcastThread(buf , manager)
+        broadcastThread = BroadcastThread(buf,manager)
         encoder = MJPEGEncoder(1000000)
         camera.start_recording(encoder,FileOutput(buf))
         broadcastThread.start()
