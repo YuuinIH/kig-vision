@@ -73,13 +73,25 @@ if os.path.exists("./image") == False:
 if os.path.exists("./video") == False:
     os.mkdir("./video")
 
+class QTthread(Thread):
+    def __init__(self,app:QApplication):
+        self.app=app
+
+    def run(self):
+        self.app.exec()
+
+qtthread = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         global camera
         camera=Picamera2()
-        camera_config=camera.create_preview_configuration(
+        qtthread=QTthread(qtapp)
+        camera_config=camera.create_preview_configuration(main=
+            {
+                "size": config.resolution,
+            }
         )
         camera.configure(camera_config)
         qpicamera2 = QGlPicamera2(camera, keep_ar=False)
@@ -87,6 +99,7 @@ async def lifespan(app: FastAPI):
         qpicamera2.showFullScreen()
         camera.start()
         qpicamera2.show()
+        qtthread.start()
     except Exception as e:
         print(e)
         raise e
@@ -94,7 +107,7 @@ async def lifespan(app: FastAPI):
     if camera != None:
         camera.close()
         camera = None
-
+    qtthread.join()
 
 app = FastAPI(lifespan=lifespan)
 
