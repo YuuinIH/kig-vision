@@ -273,7 +273,7 @@ mutex = threading.Lock()
 JSMPEG_MAGIC = b"jsmp"
 JSMPEG_HEADER = Struct(">4sHH")
 
-class BroadcastOutput(object):
+class BroadcastOutput(io.BufferedIOBase):
     def __init__(self, camera):
         print("Spawning background conversion process")
         self.converter = Popen(
