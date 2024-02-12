@@ -299,7 +299,7 @@ class BroadcastThread(Thread):
                         break
             finally:
                 self.file.close()
-
+        print("start broadcast")
         asyncio.run(broadcast_loop())
 
 
