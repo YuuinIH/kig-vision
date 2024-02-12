@@ -367,7 +367,7 @@ def setMode(req: modeRequest):
     if req.mode == "stream" and mode == "record":
         mode = req.mode
         global broadcastThread
-        buf = io.BufferedIOBase()
+        buf = io.BytesIO()
         broadcastThread = BroadcastThread(buf , manager)
         encoder = MJPEGEncoder(1000000)
         camera.start_recording(encoder,FileOutput(buf))
