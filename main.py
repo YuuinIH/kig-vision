@@ -273,33 +273,67 @@ mutex = threading.Lock()
 JSMPEG_MAGIC = b"jsmp"
 JSMPEG_HEADER = Struct(">4sHH")
 
-class BroadcastThread(Thread):
-    def __init__(self, file:io.BufferedIOBase, manager):
-        super(BroadcastThread, self).__init__()
-        self.file = file
-        self.manager = manager
-        self.stop_requested = False 
+class BroadcastOutput(object):
+    def __init__(self, camera):
+        print("Spawning background conversion process")
+        self.converter = Popen(
+            [
+                "ffmpeg",
+                "-f",
+                "rawvideo",
+                "-pix_fmt",
+                "yuv420p",
+                "-s",
+                "%dx%d" % camera.resolution,
+                "-r",
+                str(float(camera.framerate)),
+                "-i",
+                "-",
+                "-f",
+                "mpeg1video",
+                "-b",
+                "1500k",
+                "-r",
+                str(float(camera.framerate)),
+                "-",
+            ],
+            stdin=PIPE,
+            stdout=PIPE,
+            shell=False,
+            close_fds=True,
+        )
 
-    def stop(self):
-        self.stop_requested = True
+    def write(self, b):
+        self.converter.stdin.write(b)
+
+    def flush(self):
+        print("Waiting for background conversion process to exit")
+        self.converter.stdin.close()
+        self.converter.wait()
+
+class BroadcastThread(Thread):
+    def __init__(self, converter, manager):
+        super(BroadcastThread, self).__init__()
+        self.converter = converter
+        self.manager = manager
 
     def run(self):
         async def broadcast_loop():
             try:
                 while True:
-                    with self.file.condition:
-                        self.file.condition.wait()
-                        frame = self.file.frame
-                        if frame is None:
-                            break
-                        await self.manager.broadcast(frame)
-                    if self.stop_requested:
+                    buf = self.converter.stdout.read1(32768)
+                    if buf:
+                        try:
+                            mutex.acquire()
+                            await self.manager.broadcast(buf)
+                        finally:
+                            mutex.release()
+                    elif self.converter.poll() is not None:
                         break
             finally:
-                self.file.close()
-        print("start broadcast")
-        asyncio.run(broadcast_loop())
+                self.converter.stdout.close()
 
+        asyncio.run(broadcast_loop())
 
 class ConnectionManager:
     def __init__(self):
@@ -379,16 +413,16 @@ def setMode(req: modeRequest):
 
     if req.mode == "stream" and mode == "record":
         mode = req.mode
+        global broadcastOutput
+        broadcastOutput = BroadcastOutput(camera)
         global broadcastThread
-        buf = StreamingOutput()
-        broadcastThread = BroadcastThread(buf,manager)
-        encoder = MJPEGEncoder(1000000)
-        camera.start_recording(encoder,FileOutput(buf))
+        broadcastThread = BroadcastThread(broadcastOutput.converter,manager)
+        encoder = H264Encoder()
+        camera.start_recording(encoder,FileOutput(broadcastOutput))
         broadcastThread.start()
     elif req.mode == "record" and mode == "stream":
         mode = req.mode
         camera.stop_recording()
-        broadcastThread.stop()
         broadcastThread.join()
         manager.disconnectAll()
 
