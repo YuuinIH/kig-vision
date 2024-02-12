@@ -22,6 +22,8 @@ from picamera2.encoders import H264Encoder,MJPEGEncoder
 from picamera2.outputs import FfmpegOutput,FileOutput
 from libcamera import Transform
 
+os.putenv('DISPLAY',":0")
+
 resolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 fpsOptions = [30, 60]
 preViewResolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
@@ -30,6 +32,7 @@ mode = "record"
 recording=False
 
 camera = None
+window = None
 
 
 class Config(object):
@@ -129,13 +132,6 @@ def getOptions():
 
 @app.get("/config")
 def getConfig():
-    # return {
-    #     "resolution": camera.resolution,
-    #     "fps": config.fps,
-    #     "preViewResolution": config.preViewResolution,
-    #     "hflip": camera.hflip,
-    #     "vflip": camera.vflip,
-    # }
     return {
         "resolution": config.resolution,
         "fps": config.fps,
