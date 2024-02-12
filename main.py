@@ -169,7 +169,7 @@ def setConfig(configRequest: ConfigRequest):
 
 @app.post("/start")
 def startCamera():
-    camera.start_preview(Preview.QT)
+    camera.start_preview(FullScreenQtGlPreview())
     return {"status": "started"}
 
 
