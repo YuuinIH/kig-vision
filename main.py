@@ -35,7 +35,6 @@ mode = "record"
 recording=False
 
 camera = None
-qtapp = None
 
 class Config(object):
     def __init__(self) -> None:
@@ -78,7 +77,7 @@ if os.path.exists("./video") == False:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        global camera,qtapp
+        global camera
         camera=Picamera2()
         camera_config= camera.create_preview_configuration(main=
             {
