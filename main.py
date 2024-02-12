@@ -88,7 +88,7 @@ async def lifespan(app: FastAPI):
             }
         )
         camera.configure(camera_config)
-        camera.start_preview(Preview.QT)
+        camera.start_preview(Preview.QTGL)
         camera.start()
     except Exception as e:
         print(e)
@@ -169,7 +169,7 @@ def setConfig(configRequest: ConfigRequest):
 
 @app.post("/start")
 def startCamera():
-    camera.start_preview(Preview.QT)
+    camera.start_preview(Preview.QTGL)
     return {"status": "started"}
 
 
