@@ -38,7 +38,7 @@ class FullScreenQtPreviewBase:
             if parent.x is not None and parent.y is not None:
                 qpicamera2.move(parent.x, parent.y)
             qpicamera2.setWindowTitle(parent.get_title())
-            qpicamera2.showfullscreen()
+            qpicamera2.showFullScreen()
             atexit.register(parent.stop)
             previewretrieveq.put(qpicamera2)
 
