@@ -278,6 +278,10 @@ class BroadcastThread(Thread):
         super(BroadcastThread, self).__init__()
         self.file = file
         self.manager = manager
+        self.stop_requested = False 
+
+    def stop(self):
+        self.stop_requested = True
 
     def run(self):
         async def broadcast_loop():
@@ -290,6 +294,8 @@ class BroadcastThread(Thread):
                             await self.manager.broadcast(buf)
                         finally:
                             mutex.release()
+                    elif self.stop_requested:
+                        break
             finally:
                 self.file.close()
 
@@ -373,6 +379,7 @@ def setMode(req: modeRequest):
     elif req.mode == "record" and mode == "stream":
         mode = req.mode
         camera.stop_recording()
+        broadcastThread.stop()
         broadcastThread.join()
         manager.disconnectAll()
 
