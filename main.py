@@ -22,7 +22,7 @@ from picamera2.previews.qt import QGlPicamera2
 from picamera2.encoders import H264Encoder,MJPEGEncoder
 from picamera2.outputs import FfmpegOutput,FileOutput
 from libcamera import Transform
-from .fullscreenpreview import FullScreenQtGlPreview
+from .src.fullscreenpreview import FullScreenQtGlPreview
 
 os.putenv('DISPLAY',":0")
 
