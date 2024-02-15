@@ -220,6 +220,7 @@ def deleteCaptures(req: deleteCaptures):
 
 @app.post("/record")
 def recordVideo():
+    global recording
     if recording:
         raise Exception("Recording")
     if mode == "stream":
@@ -236,6 +237,7 @@ def recordVideo():
 
 @app.post("/stopRecord")
 def stopRecordVideo():
+    global recording
     if not recording:
         raise Exception("Not Recording")
     if mode == "stream":
@@ -247,6 +249,7 @@ def stopRecordVideo():
 
 @app.get("/record")
 def getRecordStatus():
+    global recording
     return {"status": recording, "recordlist": os.listdir("./video")}
 
 
@@ -413,7 +416,7 @@ class StreamingOutput(io.BufferedIOBase):
 
 @app.post("/mode")
 def setMode(req: modeRequest):
-    global mode
+    global mode, recording
     if not req.mode in modeOptions:
         raise Exception("Invalid mode")
     if recording and mode == "record" and req.mode == "stream":
