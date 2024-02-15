@@ -17,10 +17,9 @@ from subprocess import PIPE, Popen
 from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
-from picamera2 import Picamera2
+from picamera2 import Picamera2,Preview
 from picamera2.encoders import Encoder, H264Encoder
 from picamera2.outputs import FfmpegOutput, FileOutput
-from picamera2.previews import DrmPreview
 from libcamera import Transform
 from src.fullscreenpreview import FullScreenQtGlPreview
 from threading import Condition
@@ -97,7 +96,7 @@ async def lifespan(app: FastAPI):
         if config.previewMode == "qt":
             camera.start_preview(FullScreenQtGlPreview())
         elif config.previewMode == "drm":
-            camera.start_preview(DrmPreview())
+            camera.start_preview(Preview.DRM)
         else:
             camera.start_preview(FullScreenQtGlPreview())
         camera.start()
@@ -179,7 +178,7 @@ def startCamera():
     if config.previewMode == "qt":
         camera.start_preview(FullScreenQtGlPreview())
     elif config.previewMode == "drm":
-        camera.start_preview(DrmPreview())
+        camera.start_preview(Preview.DRM)
     else:
         camera.start_preview(FullScreenQtGlPreview())
     return {"status": "started"}
