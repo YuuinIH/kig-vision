@@ -143,8 +143,8 @@ def getConfig():
 
 @app.post("/config")
 def setConfig(configRequest: ConfigRequest):
-    cameraConfig.main.size = configRequest.resolution
-    cameraConfig.controls.FrameRate = configRequest.fps
+    cameraConfig["main"]["size"] = configRequest.resolution
+    cameraConfig["controls"]["FrameRate"] = configRequest.fps
     camera.stop()
     camera.configure(cameraConfig)
     camera.start()
