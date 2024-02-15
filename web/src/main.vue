@@ -31,6 +31,8 @@ const showingVideo = ref(false);
 const showingVideoSrc = ref("");
 const modeOptions = ref(["record", "stream"]);
 const mode = ref("record");
+const previewModeOption = ref(["qt","drm"]);
+const previewMode = ref("qt");
 
 const getConfigOptions = async () => {
   const response = await httpClient.options("/config");
@@ -42,12 +44,13 @@ const getConfigOptions = async () => {
 
 const getConfig = async () => {
   const response = await httpClient.get("/config");
-  const { resolution, fps, preViewResolution, hflip, vflip } = response.data;
+  const { resolution, fps, preViewResolution, hflip, vflip,previewMode} = response.data;
   selectedResolution.value = resolution.join("x");
   selectedFPS.value = fps;
   selectedPreviewResolution.value = preViewResolution.join("x");
   nowhflip.value = hflip;
   nowvflip.value = vflip;
+  previewMode.value = previewMode;
 };
 
 const updateConfig = async () => {
@@ -61,6 +64,7 @@ const updateConfig = async () => {
     preViewResolution,
     hflip: nowhflip.value,
     vflip: nowvflip.value,
+    previewMode: previewMode.value
   });
   ElMessage.success("Configuration updated");
 };
@@ -232,6 +236,18 @@ onMounted(() => {
                 <el-switch v-model="nowvflip" @change="updateConfig"
                   >Enable</el-switch
                 >
+              </el-form-item>
+
+              <el-form-item label="Preview Mode">
+                <el-radio-group v-model="previewMode" size="large" @change="updateConfig">
+                  >
+                  <el-radio-button
+                    :label="option"
+                    v-for="option in previewModeOption"
+                    :key="option"
+                    >{{ option }}</el-radio-button
+                  >
+                </el-radio-group>
               </el-form-item>
 
               <el-form-item>
