@@ -36,6 +36,8 @@ recording = False
 camera = None
 window = None
 
+cameraConfig = None
+
 
 class Config(object):
     def __init__(self) -> None:
@@ -78,9 +80,9 @@ if os.path.exists("./video") == False:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        global camera
+        global camera, cameraConfig
         camera = Picamera2()
-        camera_config = camera.create_preview_configuration(
+        cameraConfig = camera.create_preview_configuration(
             main={
                 "size": config.resolution,
             },
@@ -88,7 +90,7 @@ async def lifespan(app: FastAPI):
                 "FrameRate": config.fps,
             },
         )
-        camera.configure(camera_config)
+        camera.configure(cameraConfig)
         camera.start_preview(FullScreenQtGlPreview())
         camera.start()
     except Exception as e:
@@ -141,16 +143,10 @@ def getConfig():
 
 @app.post("/config")
 def setConfig(configRequest: ConfigRequest):
-    newconfig = camera.create_preview_configuration(
-        main={
-            "size": configRequest.resolution,
-        },
-        controls={
-            "FrameRate": configRequest.fps,
-        },
-    )
+    cameraConfig.main.size = configRequest.resolution
+    cameraConfig.controls.FrameRate = configRequest.fps
     camera.stop()
-    camera.configure(newconfig)
+    camera.configure(cameraConfig)
     camera.start()
     config.resolution = configRequest.resolution
     config.fps = configRequest.fps
