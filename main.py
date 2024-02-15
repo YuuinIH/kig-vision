@@ -18,20 +18,20 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from picamera2 import Picamera2
-from picamera2.encoders import H264Encoder,MJPEGEncoder
-from picamera2.outputs import FfmpegOutput,FileOutput
+from picamera2.encoders import JpegEncoder
+from picamera2.outputs import FfmpegOutput, FileOutput
 from libcamera import Transform
 from src.fullscreenpreview import FullScreenQtGlPreview
 from threading import Condition
 
-os.putenv('DISPLAY',":0")
+os.putenv("DISPLAY", ":0")
 
 resolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 fpsOptions = [30, 60]
 preViewResolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 modeOptions = ["record", "stream"]
 mode = "record"
-recording=False
+recording = False
 
 camera = None
 window = None
@@ -79,14 +79,14 @@ if os.path.exists("./video") == False:
 async def lifespan(app: FastAPI):
     try:
         global camera
-        camera=Picamera2()
-        camera_config= camera.create_preview_configuration(main=
-            {
+        camera = Picamera2()
+        camera_config = camera.create_preview_configuration(
+            main={
                 "size": config.resolution,
             },
             controls={
                 "FrameRate": config.fps,
-            }
+            },
         )
         camera.configure(camera_config)
         camera.start_preview(FullScreenQtGlPreview())
@@ -141,14 +141,14 @@ def getConfig():
 
 @app.post("/config")
 def setConfig(configRequest: ConfigRequest):
-    newconfig=camera.create_preview_configuration(main=
-                {
-                    "size": configRequest.resolution,
-                },
-                controls={
-                    "FrameRate": configRequest.fps,
-                }
-            )
+    newconfig = camera.create_preview_configuration(
+        main={
+            "size": configRequest.resolution,
+        },
+        controls={
+            "FrameRate": configRequest.fps,
+        },
+    )
     camera.stop()
     camera.configure(newconfig)
     camera.start()
@@ -225,8 +225,8 @@ def recordVideo():
     filename = f"./video/{timestamp}.mp4"
     encoder = H264Encoder(10000000)
     output = FfmpegOutput(filename)
-    camera.start_recording(encoder,output)
-    recording=True
+    camera.start_recording(encoder, output)
+    recording = True
     return {"status": "recording"}
 
 
@@ -237,7 +237,7 @@ def stopRecordVideo():
     if mode == "stream":
         raise Exception("Streaming")
     camera.stop_recording()
-    recording=False
+    recording = False
     return {"status": "stopped"}
 
 
@@ -271,6 +271,7 @@ def deleteRecords(req: deleteRecords):
 mutex = threading.Lock()
 JSMPEG_MAGIC = b"jsmp"
 JSMPEG_HEADER = Struct(">4sHH")
+
 
 class BroadcastOutput(io.BufferedIOBase):
     def __init__(self, camera):
@@ -310,6 +311,7 @@ class BroadcastOutput(io.BufferedIOBase):
         self.converter.stdin.close()
         self.converter.wait()
 
+
 class BroadcastThread(Thread):
     def __init__(self, converter, manager):
         super(BroadcastThread, self).__init__()
@@ -333,6 +335,7 @@ class BroadcastThread(Thread):
                 self.converter.stdout.close()
 
         asyncio.run(broadcast_loop())
+
 
 class ConnectionManager:
     def __init__(self):
@@ -392,6 +395,7 @@ async def stream_ws(websocket: WebSocket):
 class modeRequest(BaseModel):
     mode: str
 
+
 class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
         self.frame = None
@@ -401,6 +405,7 @@ class StreamingOutput(io.BufferedIOBase):
         with self.condition:
             self.frame = buf
             self.condition.notify_all()
+
 
 @app.post("/mode")
 def setMode(req: modeRequest):
@@ -415,9 +420,9 @@ def setMode(req: modeRequest):
         global broadcastOutput
         broadcastOutput = BroadcastOutput(camera)
         global broadcastThread
-        broadcastThread = BroadcastThread(broadcastOutput.converter,manager)
-        encoder = H264Encoder()
-        camera.start_recording(encoder,FileOutput(broadcastOutput))
+        broadcastThread = BroadcastThread(broadcastOutput.converter, manager)
+        encoder = JpegEncoder()
+        camera.start_recording(encoder, FileOutput(broadcastOutput))
         broadcastThread.start()
     elif req.mode == "record" and mode == "stream":
         mode = req.mode
@@ -436,6 +441,7 @@ def getMode():
 @app.get("/stream")
 def getStream():
     return FileResponse("web/dist/index.html", media_type="text/html")
+
 
 app.mount("/", StaticFiles(directory="web/dist", html=True), name="web")
 
