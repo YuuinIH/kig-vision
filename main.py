@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from picamera2 import Picamera2
-from picamera2.encoders import MJPEGEncoder
+from picamera2.encoders import JPEGEncoder
 from picamera2.outputs import FfmpegOutput, FileOutput
 from libcamera import Transform
 from src.fullscreenpreview import FullScreenQtGlPreview
@@ -421,7 +421,7 @@ def setMode(req: modeRequest):
         broadcastOutput = BroadcastOutput(camera)
         global broadcastThread
         broadcastThread = BroadcastThread(broadcastOutput.converter, manager)
-        encoder = MJPEGEncoder()
+        encoder = JPEGEncoder()
         camera.start_recording(encoder, FileOutput(broadcastOutput))
         broadcastThread.start()
     elif req.mode == "record" and mode == "stream":
