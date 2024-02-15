@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from picamera2 import Picamera2
 from picamera2.encoders import Encoder, H264Encoder
 from picamera2.outputs import FfmpegOutput, FileOutput
+from picamera2.previews import DrmPreview
 from libcamera import Transform
 from src.fullscreenpreview import FullScreenQtGlPreview
 from threading import Condition
@@ -30,6 +31,7 @@ resolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 fpsOptions = [30, 60]
 preViewResolutionOptions = [(640, 480), (1280, 720), (1920, 1080)]
 modeOptions = ["record", "stream"]
+previewModeOptions = ["qt", "drm"]
 mode = "record"
 recording = False
 
@@ -46,6 +48,7 @@ class Config(object):
         self.__dict__["preViewResolution"] = (640, 480)
         self.__dict__["hflip"] = False
         self.__dict__["vflip"] = False
+        self.__dict__["previewMode"] = "qt"
         print("init config")
         if os.path.exists("config.json"):
             self.load()
@@ -91,7 +94,12 @@ async def lifespan(app: FastAPI):
             },
         )
         camera.configure(cameraConfig)
-        camera.start_preview(FullScreenQtGlPreview())
+        if config.previewMode == "qt":
+            camera.start_preview(FullScreenQtGlPreview())
+        elif config.previewMode == "drm":
+            camera.start_preview(DrmPreview())
+        else:
+            camera.start_preview(FullScreenQtGlPreview())
         camera.start()
     except Exception as e:
         print(e)
@@ -119,6 +127,7 @@ class ConfigRequest(BaseModel):
     preViewResolution: Optional[tuple]
     hflip: Optional[bool]
     vflip: Optional[bool]
+    previewMode: Optional[str]
 
 
 @app.options("/config")
@@ -138,6 +147,7 @@ def getConfig():
         "preViewResolution": config.preViewResolution,
         "hflip": config.hflip,
         "vflip": config.vflip,
+        "previewMode": config.previewMode,
     }
 
 
@@ -153,18 +163,25 @@ def setConfig(configRequest: ConfigRequest):
     config.preViewResolution = configRequest.preViewResolution
     config.hflip = configRequest.hflip
     config.vflip = configRequest.vflip
+    config.previewMode = configRequest.previewMode
     return {
         "resolution": config.resolution,
         "fps": config.fps,
         "preViewResolution": config.preViewResolution,
         "hflip": config.hflip,
         "vflip": config.vflip,
+        "previewMode": config.previewMode,
     }
 
 
 @app.post("/start")
 def startCamera():
-    camera.start_preview(FullScreenQtGlPreview())
+    if config.previewMode == "qt":
+        camera.start_preview(FullScreenQtGlPreview())
+    elif config.previewMode == "drm":
+        camera.start_preview(DrmPreview())
+    else:
+        camera.start_preview(FullScreenQtGlPreview())
     return {"status": "started"}
 
 
