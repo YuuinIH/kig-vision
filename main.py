@@ -284,8 +284,6 @@ class BroadcastOutput(io.BufferedIOBase):
                 "ffmpeg",
                 "-f",
                 "h264",
-                "-s",
-                f"{config.resolution[0]}x{config.resolution[1]}",
                 "-r",
                 str(float(config.fps)),
                 "-i",
