@@ -87,8 +87,6 @@ async def lifespan(app: FastAPI):
             controls={
                 "FrameRate": config.fps,
             },
-            raw={},
-            encode="raw",
         )
         camera.configure(camera_config)
         camera.start_preview(FullScreenQtGlPreview())
@@ -150,8 +148,6 @@ def setConfig(configRequest: ConfigRequest):
         controls={
             "FrameRate": configRequest.fps,
         },
-        raw={},
-        encode="raw",
     )
     camera.stop()
     camera.configure(newconfig)
