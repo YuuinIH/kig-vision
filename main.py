@@ -79,17 +79,13 @@ if os.path.exists("./video") == False:
 async def lifespan(app: FastAPI):
     try:
         global camera
-        # camera = Picamera2()
-        # camera.resolution = config.resolution
-        # camera.framerate = config.fps
-        # camera.vflip = True
-        # camera.hflip = True
-        # camera.start_preview()
-        # camera.preview.resolution = config.preViewResolution
         camera=Picamera2()
         camera_config= camera.create_preview_configuration(main=
             {
                 "size": config.resolution,
+            },
+            controls={
+                "FrameRate": config.fps,
             }
         )
         camera.configure(camera_config)
@@ -148,6 +144,9 @@ def setConfig(configRequest: ConfigRequest):
     newconfig=camera.create_preview_configuration(main=
                 {
                     "size": configRequest.resolution,
+                },
+                controls={
+                    "FrameRate": configRequest.fps,
                 }
             )
     camera.stop()
