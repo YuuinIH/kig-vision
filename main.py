@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from typing import Optional
 from fastapi.staticfiles import StaticFiles
 from picamera2 import Picamera2
-from picamera2.encoders import Encoder
+from picamera2.encoders import Encoder, H264Encoder
 from picamera2.outputs import FfmpegOutput, FileOutput
 from libcamera import Transform
 from src.fullscreenpreview import FullScreenQtGlPreview
@@ -87,6 +87,8 @@ async def lifespan(app: FastAPI):
             controls={
                 "FrameRate": config.fps,
             },
+            raw={},
+            encode="raw",
         )
         camera.configure(camera_config)
         camera.start_preview(FullScreenQtGlPreview())
@@ -148,6 +150,8 @@ def setConfig(configRequest: ConfigRequest):
         controls={
             "FrameRate": configRequest.fps,
         },
+        raw={},
+        encode="raw",
     )
     camera.stop()
     camera.configure(newconfig)
