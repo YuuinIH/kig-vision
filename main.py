@@ -419,7 +419,7 @@ def setMode(req: modeRequest):
         global broadcastThread
         broadcastThread = BroadcastThread(broadcastOutput.converter, manager)
         encoder = H264Encoder(10000000)
-        camera.start_recording(encoder, FileOutput(broadcastOutput))
+        camera.start_recording(encoder, FileOutput("test.h264"))
         broadcastThread.start()
     elif req.mode == "record" and mode == "stream":
         mode = req.mode
