@@ -421,7 +421,7 @@ def setMode(req: modeRequest):
         broadcastOutput = BroadcastOutput(camera)
         global broadcastThread
         broadcastThread = BroadcastThread(broadcastOutput.converter, manager)
-        encoder = JpegEncoder({"colour_subsampling": "420"})
+        encoder = JpegEncoder(colour_subsampling="420")
         camera.start_recording(encoder, FileOutput(broadcastOutput))
         broadcastThread.start()
     elif req.mode == "record" and mode == "stream":
