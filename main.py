@@ -282,14 +282,8 @@ class BroadcastOutput(io.BufferedIOBase):
         self.converter = Popen(
             [
                 "ffmpeg",
-                # "-f",
-                # "rawvideo",
-                # "-pix_fmt",
-                # "yuv420p",
-                # "-s",
-                # "%dx%d" % (config.resolution[0], config.resolution[1]),
-                # "-r",
-                # str(float(config.fps)),
+                "-f",
+                "h264",
                 "-i",
                 "-",
                 "-f",
