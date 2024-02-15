@@ -282,14 +282,14 @@ class BroadcastOutput(io.BufferedIOBase):
         self.converter = Popen(
             [
                 "ffmpeg",
-                "-f",
-                "rawvideo",
-                "-pix_fmt",
-                "yuv420p",
-                "-s",
-                "%dx%d" % (config.resolution[0], config.resolution[1]),
-                "-r",
-                str(float(config.fps)),
+                # "-f",
+                # "rawvideo",
+                # "-pix_fmt",
+                # "yuv420p",
+                # "-s",
+                # "%dx%d" % (config.resolution[0], config.resolution[1]),
+                # "-r",
+                # str(float(config.fps)),
                 "-i",
                 "-",
                 "-f",
@@ -424,7 +424,7 @@ def setMode(req: modeRequest):
         broadcastOutput = BroadcastOutput(camera)
         global broadcastThread
         broadcastThread = BroadcastThread(broadcastOutput.converter, manager)
-        encoder = Encoder()
+        encoder = H264Encoder(10000000)
         camera.start_recording(encoder, FileOutput("test.raw"))
         broadcastThread.start()
     elif req.mode == "record" and mode == "stream":
