@@ -31,8 +31,8 @@ const showingVideo = ref(false);
 const showingVideoSrc = ref("");
 const modeOptions = ref(["record", "stream"]);
 const mode = ref("record");
-const previewModeOption = ref(["qt","drm"]);
-const previewMode = ref("qt");
+const previewModeOption = ref(["qt", "drm"]);
+const nowpreviewMode = ref("qt");
 
 const getConfigOptions = async () => {
   const response = await httpClient.options("/config");
@@ -44,13 +44,14 @@ const getConfigOptions = async () => {
 
 const getConfig = async () => {
   const response = await httpClient.get("/config");
-  const { resolution, fps, preViewResolution, hflip, vflip,previewMode} = response.data;
+  const { resolution, fps, preViewResolution, hflip, vflip, previewMode } =
+    response.data;
   selectedResolution.value = resolution.join("x");
   selectedFPS.value = fps;
   selectedPreviewResolution.value = preViewResolution.join("x");
   nowhflip.value = hflip;
   nowvflip.value = vflip;
-  previewMode.value = previewMode;
+  nowpreviewMode.value = previewMode;
 };
 
 const updateConfig = async () => {
@@ -64,7 +65,7 @@ const updateConfig = async () => {
     preViewResolution,
     hflip: nowhflip.value,
     vflip: nowvflip.value,
-    previewMode: previewMode.value
+    previewMode: nowpreviewMode.value,
   });
   ElMessage.success("Configuration updated");
 };
@@ -239,15 +240,14 @@ onMounted(() => {
               </el-form-item>
 
               <el-form-item label="Preview Mode">
-                <el-radio-group v-model="previewMode" size="large" @change="updateConfig">
-                  >
-                  <el-radio-button
-                    :label="option"
+                <el-select v-model="nowpreviewMode" @change="updateConfig">
+                  <el-option
                     v-for="option in previewModeOption"
                     :key="option"
-                    >{{ option }}</el-radio-button
-                  >
-                </el-radio-group>
+                    :label="option"
+                    :value="option"
+                  ></el-option>
+                </el-select>
               </el-form-item>
 
               <el-form-item>
