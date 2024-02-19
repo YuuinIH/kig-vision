@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "kig-vision"
+version = "0.1.0"
+description = ""
+authors = ["YuuinIH <37664092+YuuinIH@users.noreply.github.com>"]
+license = "gpl3"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+fastapi = "^0.109.2"
+uvicorn = {extras = ["standard"], version = "^0.27.1"}
+opencv-python = "^4.9.0.80"
+pyside6 = "^6.6.2"
+
+
+[[tool.poetry.source]]
+name = "mirrors"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "default"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
