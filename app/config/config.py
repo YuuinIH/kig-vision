@@ -18,7 +18,7 @@ class Config:
         with open(path, 'w') as file:
             yaml.dump(self.__dict__, file)
 
-    CAMERA_RESOLUTION = (1920, 1080)
+    CAMERA_RESOLUTION = (640, 480)
     CAMERA_FPS = 30
     CAMERA_SEARCH_LIMIT = 10
     CAMERA_INDEX = 0
