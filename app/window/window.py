@@ -36,7 +36,9 @@ class MainWindow(QMainWindow):
                 self.showNormal()
             else:
                 self.showFullScreen()
-        
+        if key == Qt.Key_H:
+            # TODO: Add help dialog
+            pass
 
     def closeEvent(self, event):
         self.previewWidget.timer.stop()

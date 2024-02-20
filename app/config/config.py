@@ -19,7 +19,7 @@ class Config:
             yaml.dump(self.__dict__, file)
 
     CAMERA_RESOLUTION = (1920, 1080)
-    CAMERA_FPS = 60
+    CAMERA_FPS = 30
     CAMERA_SEARCH_LIMIT = 10
     CAMERA_INDEX = 0
     CAMERA_VFLIP = False
