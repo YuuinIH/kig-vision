@@ -4,6 +4,7 @@ from PySide6.QtCore import Qt
 from ..camera import Camera
 from ..config import Config
 from .previewWidget import PreviewWidget
+import logging
 
 
 class MainWindow(QMainWindow):
@@ -23,7 +24,9 @@ class MainWindow(QMainWindow):
 
     def keyPressEvent(self, event):
         key = event.key()
+        logging.info(f"Key pressed: {key}")
         if key == Qt.Key_Q:
+            logging.info("Exiting")
             self.close()
         if key == Qt.Key_C:
             self.camera.nextCamera()

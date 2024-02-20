@@ -46,6 +46,7 @@ class Camera:
             self.changeCamera(self.nowCameraIndex + 1)
         else:
             self.changeCamera(0)
+        logging.info(f"Next camera: {self.nowCameraIndex}")
 
     def updateCameraSettings(self):
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.config.CAMERA_RESOLUTION[0])

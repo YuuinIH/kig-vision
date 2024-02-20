@@ -23,7 +23,7 @@ class PreviewWidget(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_image)
 
-        self.timer.start(20)
+        self.timer.start(5)
 
     def update_image(self):
         ret, frame = self.camera.getFrame()
