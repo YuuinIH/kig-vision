@@ -1,9 +1,12 @@
 import os
 import yaml
+import logging
 
 class Config:
     def __init__(self, path='config.yaml'):
-        self.__dict__ = self.loadConfig(path)
+        newDict = self.loadConfig(path)
+        if newDict:
+            self.__dict__.update(newDict)
 
     def loadConfig(self, path):
         try:
@@ -11,8 +14,8 @@ class Config:
                 with open(path, 'r') as file:
                     return yaml.safe_load(file)
         except Exception as e:
-            print(e)
-            return self.__dict__
+            logging.error(f'Error loading config: {e}')
+            raise e
 
     def save(self, path='config.yaml'):
         with open(path, 'w') as file:
