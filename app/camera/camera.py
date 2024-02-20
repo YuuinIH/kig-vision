@@ -16,6 +16,7 @@ class Camera:
             logging.error("No cameras found")
             raise Exception("No cameras found")
         self.camera = cv2.VideoCapture(self.availableCameras[0])
+        self.camera.set(cv2.CV_CAP_PROP_FOURCC,cv2.VideoWriter.fourcc('M','J','P','G'))
         self.config = config
         self.nowCameraIndex = config.CAMERA_INDEX
         self.updateCameraSettings()
