@@ -6,7 +6,7 @@ let canvas = null;
 let player = null;
 let ctx = null;
 let client = null;
-let host = import.meta.env.VITE_WS_HOST ? import.meta.env.VITE_WS_HOST : window.location.hostname;
+let host = import.meta.env.VITE_WS_HOST ? import.meta.env.VITE_WS_HOST : window.location.host;
 
 onMounted(() => {
 	console.log("init");
